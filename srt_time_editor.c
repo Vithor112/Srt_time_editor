@@ -6,7 +6,7 @@ If you want to delay the paramaters must be negative, the contrary goes to advan
 If you don't want to change in one time paramaters just put it as zero
 Example: sync legenda.srt 0 -2 0 ( to delay all the subtitles of the legenda.srt file in two seconds)
 
-Compiling just type: gcc srt_time_editor.c -o sync
+For compiling just type: gcc srt_time_editor.c -o sync
 */
 
 
