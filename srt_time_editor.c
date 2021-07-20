@@ -9,7 +9,8 @@ Example: sync legenda.srt 0 -2 -100 ( to delay all the subtitles of the legenda.
 #include "macros_and_funcs.h"
 
 int main(int argc, char *argv[]){
-    char strptr[CHAR_SIZE];
+    flag all_subtitles = ON;
+    int first_subtitle, last_subtitle, count;
     struct time time_arg;
     FILE *arqinp, *arqout;
 
@@ -17,8 +18,8 @@ int main(int argc, char *argv[]){
     arqout = NULL;
 
     // Verifying arguments
-    if (argc != 5){
-        fprintf(stderr, "Error: Number of arguments invalid: sync namefile.srt minutes seconds miliseconds");
+    if (argc != 5 && argc != 7){
+        fprintf(stderr, "Error: Number of arguments invalid: sync namefile.srt minutes seconds miliseconds or\nsync namefile.srt minutes seconds miliseconds first_subtitle last_subtitle");
         return EXIT_FAILURE;
     }
 
@@ -38,26 +39,29 @@ int main(int argc, char *argv[]){
     }
 
     // Passing args from the command line to the struct
-    time_arg.minutes = atoi(argv[2]);
-    time_arg.seconds = atoi(argv[3]);
-    time_arg.miliseconds = atoi(argv[4]);
+    time_arg.minutes = myatoi(argv[2], &count);
+    error_arguments(count);
+    time_arg.seconds = myatoi(argv[3], &count);
+    error_arguments(count);
+    time_arg.miliseconds = myatoi(argv[4], &count);
+    error_arguments(count);
 
-    char character_break, aux = 0;
-    // Copying the file to another one and changing the time. 
+    if (argc == 7){
+        all_subtitles = OFF;
+        first_subtitle = myatoi(argv[5], &count);
+        error_arguments(count);
+        last_subtitle = myatoi(argv[6], &count);
+        error_arguments(count);
+    }
+
+    int count_subtitles = 1;
+    // Copying the file to another one and changing the time if it's in the subtitles chosen. 
     while (!feof(arqinp)){
-        if (aux)
-            putc(character_break, arqout);
-        else 
-            aux++;
-        fprintf(arqout, fgets(strptr, CHAR_SIZE, arqinp)); // Copying the number. ( first line )
-        sync(arqinp, arqout, strptr, time_arg); // Copying the time of the subtitle and changing it.
-        fgets(strptr, CHAR_SIZE, arqinp);
-        while (*strptr != '\n'){ // Loop to copy the subtitle's content
-            fprintf(arqout, strptr);
-            fgets(strptr, CHAR_SIZE, arqinp);
-        }
-        fprintf(arqout, strptr);
-        while ((character_break = getc(arqinp)) == '\n'); // Loop to consume the new line characters
+        if (all_subtitles == ON || (count_subtitles >= first_subtitle && count_subtitles <= last_subtitle))
+            read_and_modify(arqinp, arqout, time_arg);
+        else
+            read_and_copy(arqinp, arqout, count_subtitles); 
+        count_subtitles++;
     }
 
 
@@ -67,10 +71,49 @@ int main(int argc, char *argv[]){
     return EXIT_SUCCESS; 
 }
 
+void read_and_copy(FILE *arqinp, FILE *arqout, int count_subtitles){
+    char strptr[CHAR_SIZE];
+    char character_break;
+    fgets(strptr, CHAR_SIZE, arqinp);
+    while (*strptr != '\n'){ // Loop to copy the subtitle's content
+        fprintf(arqout, strptr);
+        fgets(strptr, CHAR_SIZE, arqinp);
+        }
+    putc('\n', arqout);
+
+    while ((character_break = getc(arqinp)) == '\n'); // Loop to consume the break line chars
+    if (character_break != EOF){ 
+        putc(character_break, arqout);
+    if (count_subtitles < 10){ // If the subtitles is in the first ten, we have to consume the break line char too.
+        character_break = getc(arqinp);
+        putc(character_break, arqout);
+        }
+    }
+}
+
+// Read and modify one line
+void read_and_modify(FILE *arqinp, FILE *arqout, struct time time_arg){
+    char character_break;
+    char strptr[CHAR_SIZE];
+    // Copying the file to another one and changing the time. 
+    fprintf(arqout, fgets(strptr, CHAR_SIZE, arqinp)); // Copying the number. ( first line )
+    sync(arqinp, arqout, strptr, time_arg); // Copying the time of the subtitle and changing it.
+    fgets(strptr, CHAR_SIZE, arqinp);
+    while (*strptr != '\n'){ // Loop to copy the subtitle's content
+        fprintf(arqout, strptr);
+        fgets(strptr, CHAR_SIZE, arqinp);
+    }
+    putc('\n', arqout);
+    while ((character_break = getc(arqinp)) == '\n'); // Loop to consume the new line characters
+    if (character_break != EOF)
+        putc(character_break, arqout);
+    return;
+}
+
 
 // It will write the time ( after it has been fixed) in the new file.  
 void sync(FILE *arqinp, FILE *arqout, char *strptr, struct time time_arg){
-    static int aux = 1;
+    static flag aux = ON;
     struct time timefile_left, timefile_right;
 
     fgets(strptr, CHAR_SIZE, arqinp);
@@ -85,9 +128,9 @@ void sync(FILE *arqinp, FILE *arqout, char *strptr, struct time time_arg){
     subtract_time(&timefile_right, time_arg);
 
     // It'll check if the time is negative. It'll check just the first time line. 
-    if (aux){
+    if (aux == ON){
         isnegative(timefile_left);
-        aux--;
+        aux = OFF;
     }
 
     // Putting it in a new file
@@ -110,7 +153,7 @@ struct time get_time(char *pointer){
     return timefile;
 }
 
-// Function to verify if the reading was successful. 
+// Function to verify if  reading the file was successful. 
 void error_reading(int s){
     if (!s){
         fprintf(stderr, "Error: The program couldn't read the time correctly, check the syntax of your srt file");
@@ -118,6 +161,13 @@ void error_reading(int s){
     }
 }
 
+// Function to verify if  reading the arguments was successful. 
+void error_arguments(int s){
+    if (!s){ // If s equals 0 then the atoi couldn't read any digit. 
+        fprintf(stderr, "Error: The program couldn't read the arguments correctly, remeber to put just numerical value in the time arguments!");
+        exit(EXIT_FAILURE);
+    }
+}
 // It will sum the miliseconds, seconds and minutes field of the second struct into the first struct. 
 void subtract_time(struct time *time_file, struct time time_arg){
     time_file->miliseconds += time_arg.miliseconds;
@@ -153,7 +203,10 @@ void isnegative(struct time timefile){
 
 // My implementation of atoi. It has a second parameter to count how many characters the function read. 
 int myatoi(char *s, int *read_count){
-    int count  = 0, minus = *s == '-', res = 0;
+    flag minus = OFF;
+    if (*s == '-')
+        minus = ON;
+    int count  = 0, res = 0;
     char p;
     if (minus)
         s++;
@@ -167,5 +220,5 @@ int myatoi(char *s, int *read_count){
         p = *s;
     }
     *read_count = count;
-    return minus ? -res : res;
+    return minus == ON ? -res : res;
 }

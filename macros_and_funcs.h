@@ -32,6 +32,8 @@ struct time{
     int miliseconds;
 };
 
+typedef enum {OFF, ON} flag;
+
 // Functions prototypes
 void subtract_measures(int upper_limit, int lower_limit, int *independent_measure, int *dependent_measure);
 struct time get_time(char *pointer);
@@ -41,5 +43,8 @@ void isnegative(struct time timefile);
 void sync(FILE *arqinp, FILE *arqout, char *strptr, struct time time_arg);
 int myatoi(char *s, int *read_count);
 void error_reading(int s);
+void error_arguments(int s);
+void read_and_copy(FILE *arqinp, FILE *arqout, int count_subtitles);
+void read_and_modify(FILE *arqinp, FILE *arqout, struct time time_arg);
 
 #endif
