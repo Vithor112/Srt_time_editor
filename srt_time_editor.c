@@ -3,26 +3,26 @@
                 program name_of_your_srt_file minutes seconds miliseconds 
 
 If you want to delay the paramaters must be negative, the contrary goes to advance.  
-If you don't want to change in one time paramaters just put it as zero
-Example: sync legenda.srt 0 -2 0 ( to delay all the subtitles of the legenda.srt file in two seconds)
-
-For compiling just type: gcc srt_time_editor.c -o sync
-*/
-
+If you won't use some time paramater just put it as a zero. 
+Example: sync legenda.srt 0 -2 -100 ( to delay all the subtitles of the legenda.srt file in two seconds and 100 miliseconds)*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+// STRING MACRO
 #define CHAR_SIZE 1000
+
 //  TIME MACROS
 #define MILISECONDS_LIMIT 1000
 #define SECONDS_LIMIT 60
 #define MINUTES_LIMIT 60
 #define NEGATIVE_LIMIT 0
+
 //  OUTPUT FILE NAME MACRO
 #define NAME_FILE_OUT "Legenda_sinc.srt"
+
 // STRUCT TIME MACROS
 #define TIME_STRUC(x) x.hours, x.minutes, x.seconds, x.miliseconds
 #define TIME_FORMAT "%02d:%02d:%02d,%03d"
@@ -121,6 +121,7 @@ void sync(FILE *arqinp, FILE *arqout, char *strptr, struct time time_arg){
     subtract_time(&timefile_left, time_arg);
     subtract_time(&timefile_right, time_arg);
 
+    // It'll check if the time is negative. It'll check just the first time line. 
     if (aux){
         isnegative(timefile_left);
         aux--;
@@ -153,7 +154,7 @@ void subtract_time(struct time *time_file, struct time time_arg){
     }
 
 
-
+// It'll connect seconds with minutes, minutes with hours, etc. 
 void subtract_measures(int upper_limit, int lower_limit, int *independent_measure, int *dependent_measure){
     if (*dependent_measure >= upper_limit){
         *dependent_measure -= abs(upper_limit);
@@ -166,10 +167,10 @@ void subtract_measures(int upper_limit, int lower_limit, int *independent_measur
     return;
 }
 
-
+// IT'll check if some of the time measures is negative. If one of them is, it'll exit the program and print a error.  
 void isnegative(struct time timefile){
     if (ISTIMENEGATIVE){
-        fprintf(stderr, "Numeric arguments are too small, time is getting negative, pick bigger ones");
+        fprintf(stderr, "Numerical arguments are too small, check the of your first subtitle and pick bigger ones");
         exit(EXIT_FAILURE);
     }
 }
