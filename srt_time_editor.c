@@ -1,6 +1,6 @@
-/* Command line program to delay or advance all  the subtitles of a file srt, The paramaters are:
+/* Command line program to delay or advance all  the subtitles in the given lines of a file srt, The paramaters are:
 
-                program name_of_your_srt_file minutes seconds miliseconds 
+                program name_of_your_srt_file minutes seconds miliseconds initial-line final-line
 
 If you want to delay the paramaters must be negative, the contrary goes to advance.  
 If you won't use some time paramater just put it as a zero. 
@@ -10,6 +10,7 @@ Example: sync legenda.srt 0 -2 -100 ( to delay all the subtitles of the legenda.
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 // STRING MACRO
 #define CHAR_SIZE 1000
@@ -43,6 +44,8 @@ void subtract_time(struct time *time_file, struct time time_arg);
 void subtract_measures(int upper_limit, int lower_limit, int *independent_measure, int *dependent_measure);
 void isnegative(struct time timefile);
 void sync(FILE *arqinp, FILE *arqout, char *strptr, struct time time_arg);
+int myatoi(char *s, int *read_count);
+void error_reading(int s);
 
 
 int main(int argc, char *argv[]){
@@ -55,7 +58,7 @@ int main(int argc, char *argv[]){
 
     // Verifying arguments
     if (argc != 5){
-        fprintf(stderr, "Number of arguments invalid: sync namefile.srt minutes seconds miliseconds");
+        fprintf(stderr, "Error: Number of arguments invalid: sync namefile.srt minutes seconds miliseconds");
         return EXIT_FAILURE;
     }
 
@@ -66,11 +69,11 @@ int main(int argc, char *argv[]){
     
     // Exiting the function in case something goes wrong
     if (arqinp == NULL){
-        fprintf(stderr, "Input file didn't open correctly");
+        fprintf(stderr, "Error: Input file didn't open correctly");
         return EXIT_FAILURE;
     }
     if (arqout == NULL){
-        fprintf(stderr, "Output file didn't open correctly");
+        fprintf(stderr, "Error: Output file didn't open correctly");
         return EXIT_FAILURE;
     }
 
@@ -135,11 +138,24 @@ void sync(FILE *arqinp, FILE *arqout, char *strptr, struct time time_arg){
 // It will get the time from the srt file and put it in a struct 
 struct time get_time(char *pointer){
     struct time timefile;
-    timefile.hours = atoi(strtok(pointer, ":"));
-    timefile.minutes = atoi(strtok(NULL, ":"));
-    timefile.seconds = atoi(strtok(NULL, ","));
-    timefile.miliseconds = atoi(strtok(NULL, " "));
+    int count;
+    timefile.hours = myatoi(strtok(pointer, ":"), &count);
+    error_reading(count);
+    timefile.minutes = myatoi(strtok(NULL, ":"), &count);
+    error_reading(count);
+    timefile.seconds = myatoi(strtok(NULL, ","), &count);
+    error_reading(count);
+    timefile.miliseconds = myatoi(strtok(NULL, " "), &count);
+    error_reading(count);
     return timefile;
+}
+
+// Function to verify if the reading was successful. 
+void error_reading(int s){
+    if (!s){
+        fprintf(stderr, "Error: The program couldn't read the time correctly, check the syntax of your srt file");
+        exit(EXIT_FAILURE);
+    }
 }
 
 // It will sum the miliseconds, seconds and minutes field of the second struct into the first struct. 
@@ -170,7 +186,26 @@ void subtract_measures(int upper_limit, int lower_limit, int *independent_measur
 // IT'll check if some of the time measures is negative. If one of them is, it'll exit the program and print a error.  
 void isnegative(struct time timefile){
     if (ISTIMENEGATIVE){
-        fprintf(stderr, "Numerical arguments are too small, check the of your first subtitle and pick bigger ones");
+        fprintf(stderr, "Error: Numerical arguments are too small, check the of your first subtitle and pick bigger ones");
         exit(EXIT_FAILURE);
     }
+}
+
+// My implementation of atoi. It has a second parameter to count how many characters the function read. 
+int myatoi(char *s, int *read_count){
+    int count  = 0, minus = *s == '-', res = 0;
+    char p;
+    if (minus)
+        s++;
+
+    p = *s;
+    while (isdigit(p)){
+        count++;
+        res *= 10;
+        res += p - 48;
+        s++;
+        p = *s;
+    }
+    *read_count = count;
+    return minus ? -res : res;
 }
