@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 
     // Verifying arguments
     if (argc != 5 && argc != 7){
-        fprintf(stderr, "Error: Number of arguments invalid: sync namefile.srt minutes seconds miliseconds or\nsync namefile.srt minutes seconds miliseconds first_subtitle last_subtitle");
+        fprintf(stderr, "Error: Number of arguments invalid: sync namefile.srt minutes seconds miliseconds or\n\tsync namefile.srt minutes seconds miliseconds first_subtitle last_subtitle");
         return EXIT_FAILURE;
     }
 

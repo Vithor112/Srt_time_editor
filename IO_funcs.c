@@ -5,8 +5,8 @@ void read_and_copy(FILE *arqinp, FILE *arqout, int count_subtitles){
     char strptr[CHAR_SIZE];
     char character_break;
     fgets(strptr, CHAR_SIZE, arqinp);
-    while (*strptr != '\n'){ // Loop to copy the subtitle's content
-        fprintf(arqout, strptr);
+    while (strcmp(strptr, "\r\n") != 0 && strcmp(strptr, "\n") != 0){ // Loop to copy the subtitle's content
+        fprintf(arqout, "%s", strptr);
         fgets(strptr, CHAR_SIZE, arqinp);
         }
     putc('\n', arqout);
@@ -26,11 +26,11 @@ void read_and_modify(FILE *arqinp, FILE *arqout, struct time time_arg){
     char character_break;
     char strptr[CHAR_SIZE];
     // Copying the file to another one and changing the time. 
-    fprintf(arqout, fgets(strptr, CHAR_SIZE, arqinp)); // Copying the number. ( first line )
+    fprintf(arqout, "%s", fgets(strptr, CHAR_SIZE, arqinp)); // Copying the number. ( first line )
     sync(arqinp, arqout, strptr, time_arg); // Copying the time of the subtitle and changing it.
     fgets(strptr, CHAR_SIZE, arqinp);
-    while (*strptr != '\n'){ // Loop to copy the subtitle's content
-        fprintf(arqout, strptr);
+    while (strcmp(strptr, "\r\n") != 0 && strcmp(strptr, "\n") != 0){ // Loop to copy the subtitle's content
+        fprintf(arqout, "%s", strptr);
         fgets(strptr, CHAR_SIZE, arqinp);
     }
     putc('\n', arqout);
