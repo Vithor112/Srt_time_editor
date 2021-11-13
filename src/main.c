@@ -11,7 +11,7 @@ If you want to delay the paramaters must be negative, the contrary goes to advan
 If you won't use some time paramater just put it as a zero. 
 Example: sync legenda.srt 0 -2 -100 ( to delay all the subtitles of the legenda.srt file in two seconds and 100 miliseconds)*/
 
-#include "macros_and_funcs.h"
+#include "libs/macros_and_funcs.h"
 
 int main(int argc, char *argv[]){
     flag all_subtitles = ON;
