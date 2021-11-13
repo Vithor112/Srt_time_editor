@@ -25,5 +25,17 @@ It's useful because saves you time when you need to advance or delay a part or a
 
 
 
+### Compile
 
+   For compile, you need to have CMake installed:  
+   
+   `  
+   
+      mkrdir -p build        
+      cd build  
+      cmake ..  
+      cmake --build .
+   `   
+   
+   Then you'll have an executable called **srt_time_editor** in the build file.
 
