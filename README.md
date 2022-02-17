@@ -21,7 +21,7 @@ It's useful because saves you time when you need to advance or delay a part or a
     sync name_file.srt minutes seconds milliseconds first_block last_block
 
    If you want to delay, the time parameters must be negative. If you won't use one of the time parameters puts it as a zero.
-   If you want to change the time of all the blocks, you can omit the first and the last parameters.
+   If you want to change the time of all the blocks, you can omit the two last parameters.
 
 
 
